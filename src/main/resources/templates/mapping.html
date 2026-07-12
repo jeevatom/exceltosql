@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            new Sortable($("#columnMappingBody")[0], {
+                animation: 150,
+                handle: ".drag-icon",
+
+                onEnd: function () {
+
+                    $(".draggable-row").each(function (index) {
+
+                        $(this).find(".order-number")
+                            .text(index + 1);
+
+                    });
+
+                }
+            });
+        });
+    </script>
+</head>
+
+
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>
+                            <i class="bi bi-file-earmark-spreadsheet"></i>
+                            Column Mapping
+                        </h3>
+                    </div>
+
+                    <div class="card-body">
+                        <form action="/generateSql" method="post">
+                            <input type="hidden" name="tableName" th:value="${tableName}">
+                            <input type="hidden" name="database" th:value="${database}">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Select</th>
+                                        <th>Excel Column</th>
+                                        <th>Database Column</th>
+                                        <th>Order</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="columnMappingBody">
+
+                                    <tr th:each="column,stat : ${columns}" class="draggable-row">
+
+                                        <td>
+                                            <i class="bi bi-grip-vertical drag-icon"></i>
+
+                                            <input type="checkbox" th:name="'columns['+${stat.index}+'].selected'"
+                                                checked>
+                                        </td>
+
+                                        <td>
+                                            <input class="form-control" readonly th:value="${column.excelName}"
+                                                th:name="'columns['+${stat.index}+'].excelName'">
+                                        </td>
+
+                                        <td>
+                                            <input class="form-control" th:value="${column.dbName}"
+                                                th:name="'columns['+${stat.index}+'].dbName'">
+                                        </td>
+
+                                        <td>
+                                            <span class="order-number" th:text="${stat.index+1}"></span>
+                                            <i class="bi bi-grip-vertical drag-icon"></i>
+                                        </td>
+
+                                    </tr>
+
+                                </tbody>
+
+                            </table>
+
+
+                            <button class="btn btn-primary px-5">
+                                <i class="bi bi-gear-fill"></i>
+                                Generate SQL
+                            </button>
+
+
+                        </form>
+
+                    </div>
+
+                </div>
+            </div>
+
+
+</body>
+
+</html>
