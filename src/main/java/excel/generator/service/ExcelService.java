@@ -14,133 +14,104 @@ import excel.generator.model.ColumnInfo;
 @Service
 public class ExcelService {
 
+    public List<ColumnInfo> getColumns(MultipartFile file) {
+        try {
 
-    public List<ColumnInfo> getColumns(MultipartFile file) throws Exception {
+            List<ColumnInfo> columns = new ArrayList<>();
 
-        List<ColumnInfo> columns = new ArrayList<>();
+            Workbook workbook = WorkbookFactory.create(file.getInputStream());
 
-        Workbook workbook = WorkbookFactory.create(file.getInputStream());
+            Sheet sheet = workbook.getSheetAt(0);
 
-        Sheet sheet = workbook.getSheetAt(0);
+            Row headerRow = sheet.getRow(0);
 
-        Row headerRow = sheet.getRow(0);
+            for (Cell cell : headerRow) {
 
+                DataFormatter formatter = new DataFormatter();
 
-        for(Cell cell : headerRow) {
+                String excelName = formatter.formatCellValue(cell);
 
-            String excelName = cell.getStringCellValue();
+                String dbName = convertToDatabaseName(excelName);
 
-            String dbName = convertToDatabaseName(excelName);
+                columns.add(
+                        new ColumnInfo(
+                                excelName,
+                                dbName,
+                                true));
+            }
 
+            workbook.close();
 
-            columns.add(
-                    new ColumnInfo(
-                            excelName,
-                            dbName,
-                            true
-                    )
-            );
+            return columns;
+        } catch (Exception e) {
+            System.out.println("Exception. : " + e);
+            return null;
         }
-
-
-        workbook.close();
-
-        return columns;
     }
 
+    public List<Map<String, Object>> getExcelData(MultipartFile file) throws Exception {
 
-
-    public List<Map<String,Object>> getExcelData(MultipartFile file) throws Exception {
-
-
-        List<Map<String,Object>> data = new ArrayList<>();
-
+        List<Map<String, Object>> data = new ArrayList<>();
 
         Workbook workbook = WorkbookFactory.create(file.getInputStream());
 
         Sheet sheet = workbook.getSheetAt(0);
 
-
         Row headerRow = sheet.getRow(0);
 
-
         List<String> headers = new ArrayList<>();
+        for (Cell cell : headerRow) {
 
+             DataFormatter formatter = new DataFormatter();
 
-        for(Cell cell : headerRow) {
-
-            headers.add(cell.getStringCellValue());
-
+             String columndata = formatter.formatCellValue(cell);
+                
+            headers.add(columndata);
         }
 
-
-
-        for(int i = 1; i <= sheet.getLastRowNum(); i++) {
-
+        for (int i = 1; i <= sheet.getLastRowNum(); i++) {
 
             Row row = sheet.getRow(i);
 
+            Map<String, Object> rowData = new LinkedHashMap<>();
 
-            Map<String,Object> rowData = new LinkedHashMap<>();
+            for (int j = 0; j < headers.size(); j++) {
 
-
-            for(int j = 0; j < headers.size(); j++) {
-
-
-                Cell cell = row.getCell(j);
-
+                Cell cell = row.getCell(j+1);
 
                 rowData.put(
                         headers.get(j),
-                        getCellValue(cell)
-                );
+                        getCellValue(cell));
 
             }
-
 
             data.add(rowData);
 
         }
 
-
         workbook.close();
-
 
         return data;
     }
 
-
-
     private Object getCellValue(Cell cell) {
 
-
-        if(cell == null) {
+        if (cell == null) {
             return null;
         }
 
-
-        switch(cell.getCellType()) {
-
-
+        switch (cell.getCellType()) {
             case STRING:
-                return cell.getStringCellValue();
-
-
+                return cell.getStringCellValue().toString();
             case NUMERIC:
-                return cell.getNumericCellValue();
-
-
+                return String.valueOf(cell.getNumericCellValue());
             case BOOLEAN:
-                return cell.getBooleanCellValue();
-
+                return String.valueOf(cell.getBooleanCellValue());
 
             default:
                 return null;
         }
     }
-
-
-
 
     private String convertToDatabaseName(String name) {
 
