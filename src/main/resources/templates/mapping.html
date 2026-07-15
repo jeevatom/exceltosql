@@ -23,10 +23,30 @@
                             .text(index + 1);
 
                     });
-
                 }
             });
         });
+
+function funGenerate() {
+        let form = document.getElementById("frmGenerate");
+        let formData = new FormData(form);
+
+        $.ajax({
+            url: "/generateSql",
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                document.open();
+                document.write(response);
+                document.close();
+            },
+            error: function(xhr) {
+               $("#alertMsg").html(xhr.getResponseHeader)
+            }
+        });
+    }
     </script>
 </head>
 
@@ -44,7 +64,7 @@
                     </div>
 
                     <div class="card-body">
-                        <form action="/generateSql" method="post">
+                        <form  id="frmGenerate">
                             <input type="hidden" name="tableName" th:value="${tableName}">
                             <input type="hidden" name="database" th:value="${database}">
                             <table class="table table-hover">
@@ -52,7 +72,7 @@
                                     <tr>
                                         <th>Select</th>
                                         <th>Excel Column</th>
-                                        <th>Database Column</th>
+                                        <th>Table Column</th>
                                         <th>Order</th>
                                     </tr>
                                 </thead>
@@ -89,7 +109,7 @@
                             </table>
 
 
-                            <button class="btn btn-primary px-5">
+                            <button type="button" onclick="funGenerate()" class="btn btn-primary px-5">
                                 <i class="bi bi-gear-fill"></i>
                                 Generate SQL
                             </button>

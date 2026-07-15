@@ -40,7 +40,7 @@ public class SqlGeneratorService {
 
         selectedColumns.forEach(column -> joiner.add(column.getDbName() + " VARCHAR(255)"));
         sql.append(joiner);
-        sql.append(");\n\n");
+        sql.append("\n);\n\n");
 
         for (Map<String, Object> row : excelData) {
 
@@ -54,11 +54,8 @@ public class SqlGeneratorService {
                     .map(column -> {
 
                         Object value = row.get(column.getExcelName());
-
                         if (value == null) {
-
                             return "NULL";
-
                         }
 
                         return "'" +
@@ -69,15 +66,10 @@ public class SqlGeneratorService {
 
                     })
                     .collect(Collectors.joining(", "));
-
             sql.append(values);
-
             sql.append(");\n\n");
-
         }
-
         return sql.toString();
-
     }
 
 }
