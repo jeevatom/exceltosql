@@ -1,15 +1,14 @@
 package excel.generator.controller;
 
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import excel.generator.model.ColumnInfo;
 import excel.generator.Dto.ColumnMappingRequest;
+import excel.generator.model.ColumnInfo;
 import excel.generator.service.ExcelService;
 import excel.generator.service.SqlGeneratorService;
 import jakarta.servlet.http.HttpSession;
@@ -18,7 +17,6 @@ import jakarta.servlet.http.HttpSession;
 public class ExcelController {
 
     private final ExcelService excelService;
-
     private final SqlGeneratorService sqlGeneratorService;
 
     public ExcelController(
@@ -29,6 +27,7 @@ public class ExcelController {
         this.sqlGeneratorService = sqlGeneratorService;
     }
 
+
     @PostMapping("/upload")
     public String uploadExcel(
             @RequestParam MultipartFile file,
@@ -36,27 +35,43 @@ public class ExcelController {
             @RequestParam String tableName,
             Model model) throws Exception {
 
+
+        // Read only headers
         List<ColumnInfo> columns = excelService.getColumns(file);
 
-        List<Map<String, Object>> excelData = excelService.getExcelData(file);
+
+        // Save file instead of storing excel data
+        String filePath = excelService.saveFile(file);
+
 
         session.setAttribute(
-                "excelData",
-                excelData);
+                "filePath",
+                filePath
+        );
+
 
         model.addAttribute(
                 "columns",
-                columns);
+                columns
+        );
 
-        tableName = tableName.trim()
+
+        tableName = tableName
+                .trim()
                 .toLowerCase()
                 .replaceAll("\\s+", "_");
+
+
         model.addAttribute(
                 "tableName",
-                tableName);
+                tableName
+        );
+
 
         return "mapping";
     }
+
+
 
     @PostMapping("/generateSql")
     public String generateSql(
@@ -64,18 +79,28 @@ public class ExcelController {
             @RequestParam String database,
             @ModelAttribute ColumnMappingRequest request,
             HttpSession session,
-            Model model) {
+            Model model) throws Exception {
 
-        List<Map<String, Object>> excelData = (List<Map<String, Object>>) session.getAttribute("excelData");
 
-        String sql = sqlGeneratorService.generateInsertSql(
-                tableName,
-                request.getColumns(),
-                excelData);
+
+        String filePath =
+                (String) session.getAttribute("filePath");
+
+
+
+        String sql =
+                sqlGeneratorService.generateInsertSql(
+                        tableName,
+                        request.getColumns(),
+                        filePath
+                );
+
 
         model.addAttribute(
                 "sql",
-                sql);
+                sql
+        );
+
 
         return "sql-result";
     }
